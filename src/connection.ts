@@ -5820,7 +5820,7 @@ export class Connection {
 
     const signers = configOrSigners;
     if (transaction.nonceInfo && signers) {
-      transaction.sign(...signers);
+      await transaction.sign(...signers);
     } else {
       let disableCache = this._disableBlockhashCaching;
       for (;;) {
@@ -5831,7 +5831,7 @@ export class Connection {
 
         if (!signers) break;
 
-        transaction.sign(...signers);
+        await transaction.sign(...signers);
         if (!transaction.signature) {
           throw new Error('!signature'); // should never happen
         }
@@ -5958,7 +5958,7 @@ export class Connection {
 
     const signers = signersOrOptions;
     if (transaction.nonceInfo) {
-      transaction.sign(...signers);
+      await transaction.sign(...signers);
     } else {
       let disableCache = this._disableBlockhashCaching;
       for (;;) {
@@ -5966,7 +5966,7 @@ export class Connection {
           await this._blockhashWithExpiryBlockHeight(disableCache);
         transaction.lastValidBlockHeight = latestBlockhash.lastValidBlockHeight;
         transaction.recentBlockhash = latestBlockhash.blockhash;
-        transaction.sign(...signers);
+        await transaction.sign(...signers);
         if (!transaction.signature) {
           throw new Error('!signature'); // should never happen
         }

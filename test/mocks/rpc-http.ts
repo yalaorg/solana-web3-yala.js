@@ -220,7 +220,7 @@ const processTransaction = async ({
   });
   transaction.lastValidBlockHeight = lastValidBlockHeight;
   transaction.recentBlockhash = blockhash;
-  transaction.sign(...signers);
+  await transaction.sign(...signers);
 
   const encoded = transaction.serialize().toString('base64');
   invariant(transaction.signature);

@@ -7,6 +7,7 @@ export * from './epoch-schedule';
 export * from './errors';
 export * from './fee-calculator';
 export * from './keypair';
+export * from './signer-external';
 export * from './loader';
 export * from './message';
 export * from './nonce-account';

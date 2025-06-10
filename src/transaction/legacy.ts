@@ -13,6 +13,7 @@ import type {Blockhash} from '../blockhash';
 import type {CompiledInstruction} from '../message';
 import {sign, verify} from '../utils/ed25519';
 import {guardedSplice} from '../utils/guarded-array-utils';
+import type {SignerAction} from '../signer-external';
 
 /** @internal */
 type MessageSignednessErrors = {
@@ -659,7 +660,7 @@ export class Transaction {
    *
    * @param {Array<Signer>} signers Array of signers that will sign the transaction
    */
-  sign(...signers: Array<Signer>) {
+  async sign(...signers: Array<Signer>) {
     if (signers.length === 0) {
       throw new Error('No signers');
     }
@@ -683,7 +684,7 @@ export class Transaction {
     }));
 
     const message = this._compile();
-    this._partialSign(message, ...uniqueSigners);
+    await this._partialSignAsync(message, ...uniqueSigners);
   }
 
   /**
@@ -726,6 +727,20 @@ export class Transaction {
       const signature = sign(signData, signer.secretKey);
       this._addSignature(signer.publicKey, toBuffer(signature));
     });
+  }
+
+  async _partialSignAsync(message: Message, ...signers: Array<Signer>) {
+    const signData = message.serialize();
+    for (const signer of signers) {
+      const signerAction = signer as SignerAction;
+      if (typeof signerAction.sign !== 'function') {
+        throw new Error(
+          'Signer must implement SignerAction interface for async signing',
+        );
+      }
+      const signature = await signerAction.sign(signData);
+      this._addSignature(signer.publicKey, toBuffer(signature));
+    }
   }
 
   /**
