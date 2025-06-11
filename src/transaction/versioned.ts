@@ -9,6 +9,7 @@ import * as Layout from '../layout';
 import {sign} from '../utils/ed25519';
 import {PublicKey} from '../publickey';
 import {guardedSplice} from '../utils/guarded-array-utils';
+import {SignerAction} from '../signer-external';
 
 export type TransactionVersion = 'legacy' | 0;
 
@@ -91,7 +92,7 @@ export class VersionedTransaction {
     return new VersionedTransaction(message, signatures);
   }
 
-  sign(signers: Array<Signer>) {
+  async sign(signers: Array<Signer>) {
     const messageData = this.message.serialize();
     const signerPubkeys = this.message.staticAccountKeys.slice(
       0,
@@ -105,7 +106,15 @@ export class VersionedTransaction {
         signerIndex >= 0,
         `Cannot sign with non signer key ${signer.publicKey.toBase58()}`,
       );
-      this.signatures[signerIndex] = sign(messageData, signer.secretKey);
+
+      if (typeof (signer as any).sign === 'function') {
+        const signerAction = signer as SignerAction;
+        this.signatures[signerIndex] = await signerAction.sign(
+          Buffer.from(messageData),
+        );
+      } else {
+        this.signatures[signerIndex] = sign(messageData, signer.secretKey);
+      }
     }
   }
 
