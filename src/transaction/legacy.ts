@@ -732,14 +732,14 @@ export class Transaction {
   async _partialSignAsync(message: Message, ...signers: Array<Signer>) {
     const signData = message.serialize();
     for (const signer of signers) {
-      const signerAction = signer as SignerAction;
-      if (typeof signerAction.sign !== 'function') {
-        throw new Error(
-          'Signer must implement SignerAction interface for async signing',
-        );
+      if (typeof (signer as any).sign === 'function') {
+        const signerAction = signer as SignerAction;
+        const signature = await signerAction.sign(signData);
+        this._addSignature(signer.publicKey, toBuffer(signature));
+      } else {
+        const signature = sign(signData, signer.secretKey);
+        this._addSignature(signer.publicKey, toBuffer(signature));
       }
-      const signature = await signerAction.sign(signData);
-      this._addSignature(signer.publicKey, toBuffer(signature));
     }
   }
 
